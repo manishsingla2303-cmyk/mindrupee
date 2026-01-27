@@ -1,0 +1,5 @@
+Note: To complete the WordPress theme, add a screenshot.png file (1200x900px recommended) showing your theme design.
+
+This will appear in the WordPress admin when selecting themes.
+
+You can take a screenshot of your website homepage and save it as screenshot.png in the theme folder.
