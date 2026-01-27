@@ -1,44 +1,11 @@
-"use client"
-
-import { useEffect, useState } from "react"
 import Link from "next/link"
-import { getWordPressPosts } from "@/lib/wordpress"
+import Image from "next/image"
+import { getAllPosts } from "@/lib/mdx"
 
-interface BlogPost {
-  id: number
-  slug: string
-  title: string
-  excerpt: string
-  date: string
-  category: string
-  image: string
-}
-
-export function BlogSection() {
-  const [blogs, setBlogs] = useState<BlogPost[]>([])
-  const [loading, setLoading] = useState(true)
-
-  useEffect(() => {
-    const fetchBlogs = async () => {
-      const posts = await getWordPressPosts(4)
-      setBlogs(posts)
-      setLoading(false)
-    }
-
-    fetchBlogs()
-  }, [])
-
-  if (loading) {
-    return (
-      <section id="blogs" className="py-20 bg-white">
-        <div className="container mx-auto px-4">
-          <div className="text-center">
-            <p className="text-gray-600">Loading articles...</p>
-          </div>
-        </div>
-      </section>
-    )
-  }
+export async function BlogSection() {
+  const allPosts = getAllPosts()
+  // Take the most recent 4 posts
+  const blogs = allPosts.slice(0, 4)
 
   return (
     <section id="blogs" className="py-20 bg-white">
@@ -51,16 +18,18 @@ export function BlogSection() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           {blogs.map((blog) => (
-            <Link key={blog.id} href={`/blog/${blog.slug}`}>
-              <article className="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow cursor-pointer">
-                <div className="aspect-video bg-gray-200 overflow-hidden">
-                  <img
+            <Link key={blog.slug} href={`/blog/${blog.slug}`}>
+              <article className="bg-white rounded-lg overflow-hidden shadow-md hover:shadow-lg transition-shadow cursor-pointer h-full flex flex-col">
+                <div className="relative aspect-video bg-gray-200 overflow-hidden">
+                  <Image
                     src={blog.image || "/placeholder.svg"}
                     alt={blog.title}
-                    className="w-full h-full object-cover hover:scale-105 transition-transform"
+                    fill
+                    className="object-cover hover:scale-105 transition-transform"
+                    sizes="(max-width: 768px) 100vw, 50vw"
                   />
                 </div>
-                <div className="p-6">
+                <div className="p-6 flex-1 flex flex-col">
                   <div className="flex items-center gap-3 mb-3">
                     <span className="text-xs font-semibold text-teal-600 bg-teal-50 px-3 py-1 rounded-full">
                       {blog.category}
