@@ -89,7 +89,7 @@ export async function getWordPressPostBySlug(slug: string) {
     const posts: WordPressPost[] = await response.json()
     if (posts.length === 0) return null
 
-    return formatWordPressPost(posts[0])
+    return await formatWordPressPost(posts[0])
   } catch (error) {
     console.error("[v0] WordPress API Error:", error)
     return null
@@ -102,9 +102,7 @@ async function formatWordPressPost(post: WordPressPost) {
 
   // Strip HTML tags from excerpt and content
   const stripHtml = (html: string) => {
-    const tmp = document.createElement("div")
-    tmp.innerHTML = html
-    return tmp.textContent || tmp.innerText || ""
+    return html.replace(/<[^>]*>?/gm, "")
   }
 
   // Get category name from embedded data or fetch it
