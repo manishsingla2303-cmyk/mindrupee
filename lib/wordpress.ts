@@ -16,6 +16,9 @@ export interface WordPressPost {
   date: string
   categories: number[]
   _embedded?: {
+    author?: Array<{
+      name: string
+    }>
     "wp:featuredmedia"?: Array<{
       source_url: string
       alt_text: string
@@ -112,10 +115,13 @@ async function formatWordPressPost(post: WordPressPost) {
     categoryName = await getCategoryName(post.categories[0])
   }
 
+  const author = post._embedded?.author?.[0]?.name || "MindRupee Team"
+
   return {
     id: post.id,
     slug: post.slug,
     title: post.title.rendered,
+    author,
     excerpt: stripHtml(post.excerpt.rendered).slice(0, 160) + "...",
     content: post.content.rendered,
     date: new Date(post.date).toLocaleDateString("en-US", {
