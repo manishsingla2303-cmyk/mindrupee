@@ -4,7 +4,20 @@ const nextConfig = {
     ignoreBuildErrors: true,
   },
   images: {
-    unoptimized: true,
+    remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'blog.mindrupee.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'secure.gravatar.com',
+      },
+      {
+        protocol: 'https',
+        hostname: 'mindrupee.com',
+      },
+    ],
   },
 }
 

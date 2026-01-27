@@ -1,13 +1,34 @@
 import { Header } from "@/components/header"
 import { Footer } from "@/components/footer"
 import Link from "next/link"
-import { getWordPressPostBySlug } from "@/lib/wordpress"
+import { getPostBySlug } from "@/lib/mdx"
 import { BlogPostClient } from "@/components/blog-post-client"
 import { ExpertTestimonial } from "@/components/expert-testimonial"
+import Image from "next/image"
+import { MDXRemote } from "next-mdx-remote/rsc"
+
+// Custom components for MDX
+const components = {
+  img: (props: any) => (
+    <Image
+      src={props.src}
+      alt={props.alt || ""}
+      width={800}
+      height={500}
+      className="rounded-lg my-8 w-full h-auto"
+      sizes="(max-width: 768px) 100vw, 800px"
+    />
+  ),
+  iframe: (props: any) => (
+    <div className="iframe-wrapper">
+      <iframe {...props} />
+    </div>
+  )
+}
 
 export default async function BlogPostPage(props: { params: Promise<{ slug: string }> }) {
   const params = await props.params
-  const blog = await getWordPressPostBySlug(params.slug)
+  const blog = getPostBySlug(params.slug)
 
   if (!blog) {
     return (
@@ -57,11 +78,14 @@ export default async function BlogPostPage(props: { params: Promise<{ slug: stri
             <div className="lg:col-span-2">
               {/* Main Content */}
               {/* Featured Image */}
-              <div className="mb-10 rounded-xl overflow-hidden shadow-lg">
-                <img
+              <div className="mb-10 rounded-xl overflow-hidden shadow-lg relative h-96 w-full">
+                <Image
                   src={blog.image || "/placeholder.svg"}
                   alt={blog.title}
-                  className="w-full h-96 object-cover"
+                  fill
+                  className="object-cover"
+                  priority
+                  sizes="(max-width: 768px) 100vw, (max-width: 1200px) 75vw, 800px"
                 />
               </div>
 
@@ -75,14 +99,9 @@ export default async function BlogPostPage(props: { params: Promise<{ slug: stri
 
               {/* Article Content */}
               <div className="bg-white rounded-lg p-8 mb-12">
-                <div
-                  className="prose prose-lg max-w-none"
-                  dangerouslySetInnerHTML={{
-                    __html: blog.content
-                      .replace(/<iframe/g, '<div class="iframe-wrapper"><iframe')
-                      .replace(/<\/iframe>/g, '</iframe></div>')
-                  }}
-                />
+                <div className="prose prose-lg max-w-none">
+                  <MDXRemote source={blog.content} components={components} />
+                </div>
               </div>
 
               {/* Engagement Section at Bottom */}
