@@ -77,7 +77,7 @@ export async function getWordPressPosts(limit = 10) {
 
 export async function getWordPressPostBySlug(slug: string) {
   try {
-    const response = await fetch(`${WORDPRESS_API_URL}/posts?slug=${slug}&_embed`, { next: { revalidate: 3600 } })
+    const response = await fetch(`${WORDPRESS_API_URL}/posts?slug=${slug}&_embed`, { cache: 'no-store' })
 
     if (!response.ok) {
       throw new Error("Failed to fetch WordPress post")
