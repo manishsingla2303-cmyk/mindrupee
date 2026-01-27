@@ -1,4 +1,4 @@
-const WORDPRESS_API_URL = "https://mindrupee.com/wp-json/wp/v2"
+const WORDPRESS_API_URL = process.env.NEXT_PUBLIC_WORDPRESS_URL || "https://blog.mindrupee.com/wp-json/wp/v2"
 
 export interface WordPressPost {
   id: number
