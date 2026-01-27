@@ -5,7 +5,8 @@ import { getWordPressPostBySlug } from "@/lib/wordpress"
 import { BlogPostClient } from "@/components/blog-post-client"
 import { ExpertTestimonial } from "@/components/expert-testimonial"
 
-export default async function BlogPostPage({ params }: { params: { slug: string } }) {
+export default async function BlogPostPage(props: { params: Promise<{ slug: string }> }) {
+  const params = await props.params
   const blog = await getWordPressPostBySlug(params.slug)
 
   if (!blog) {
@@ -65,7 +66,7 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
               </div>
 
               {/* Table of Contents - Moved to Top */}
-              <BlogPostClient 
+              <BlogPostClient
                 blogSlug={params.slug}
                 blogTitle={blog.title}
                 content={blog.content}
@@ -76,7 +77,7 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
               <div className="bg-white rounded-lg p-8 mb-12">
                 <div
                   className="prose prose-lg max-w-none"
-                  dangerouslySetInnerHTML={{ 
+                  dangerouslySetInnerHTML={{
                     __html: blog.content
                       .replace(/<iframe/g, '<div class="iframe-wrapper"><iframe')
                       .replace(/<\/iframe>/g, '</iframe></div>')
@@ -85,14 +86,14 @@ export default async function BlogPostPage({ params }: { params: { slug: string 
               </div>
 
               {/* Engagement Section at Bottom */}
-              <BlogPostClient 
+              <BlogPostClient
                 blogSlug={params.slug}
                 blogTitle={blog.title}
                 content={blog.content}
                 tocOnly={false}
               />
             </div>
-            
+
             {/* Sidebar */}
             <div className="lg:col-span-1">
               <ExpertTestimonial />
