@@ -3,10 +3,6 @@ import { cookies } from 'next/headers'
 import { NextRequest, NextResponse } from 'next/server'
 import { Resend } from 'resend'
 
-// Initialize Resend inside handler to avoid build-time errors
-// const resend = new Resend(process.env.RESEND_API_KEY)
-
-
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
@@ -15,16 +11,25 @@ export async function POST(request: NextRequest) {
     // Validate required fields
     if (!name || !email || !message) {
       return NextResponse.json(
-        { error: 'Missing required fields' },
+        { error: 'Missing required fields: name, email, and message are required.' },
         { status: 400 }
+      )
+    }
+
+    // Check environment variables
+    if (!process.env.NEXT_PUBLIC_SUPABASE_URL || !process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY) {
+      console.error('[v0] Missing Supabase environment variables')
+      return NextResponse.json(
+        { error: 'Server configuration error. Please check environment variables.' },
+        { status: 500 }
       )
     }
 
     // Create Supabase client
     const cookieStore = await cookies()
     const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+      process.env.NEXT_PUBLIC_SUPABASE_URL,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY,
       {
         cookies: {
           getAll() {
@@ -37,8 +42,7 @@ export async function POST(request: NextRequest) {
               )
             } catch {
               // The `setAll` method was called from a Server Component.
-              // This can be ignored if you have middleware refreshing
-              // user sessions.
+              // This can be ignored if you have middleware refreshing user sessions.
             }
           },
         },
@@ -54,6 +58,8 @@ export async function POST(request: NextRequest) {
       preferredDate = dateTime.toISOString().split('T')[0] // YYYY-MM-DD
       preferredTime = dateTime.toTimeString().split(' ')[0] // HH:MM:SS
     }
+
+    console.log('[v0] Inserting contact submission:', { name, email, phone, preferredDate, preferredTime })
 
     // Insert into database
     const { data, error } = await supabase
@@ -71,46 +77,60 @@ export async function POST(request: NextRequest) {
       .select()
 
     if (error) {
-      console.error('Supabase error:', error)
+      console.error('[v0] Supabase error:', error)
       return NextResponse.json(
-        { error: 'Failed to save submission' },
+        { error: `Failed to save submission: ${error.message}` },
         { status: 500 }
       )
     }
 
+    console.log('[v0] Submission saved successfully:', data)
+
     // Send email notification
-    try {
-      const resend = new Resend(process.env.RESEND_API_KEY)
-      const emailContent = `
-        <h2>New Contact Form Submission</h2>
-        <p><strong>Name:</strong> ${name}</p>
-        <p><strong>Email:</strong> ${email}</p>
-        ${phone ? `<p><strong>Phone:</strong> ${phone}</p>` : ''}
-        ${preferredDateTime ? `<p><strong>Preferred Date/Time:</strong> ${new Date(preferredDateTime).toLocaleString()}</p>` : ''}
-        <p><strong>Message:</strong></p>
-        <p>${message.replace(/\n/g, '<br>')}</p>
-      `
+    if (process.env.RESEND_API_KEY) {
+      try {
+        const resend = new Resend(process.env.RESEND_API_KEY)
+        
+        // Important: Replace with your verified domain email
+        const fromEmail = process.env.RESEND_FROM_EMAIL || 'onboarding@resend.dev'
+        const toEmail = process.env.RESEND_TO_EMAIL || 'manish.singla2303@gmail.com'
 
-      const emailResponse = await resend.emails.send({
-        from: 'onboarding@resend.dev',
-        to: 'manish.singla2303@gmail.com',
-        subject: `New Contact Form Submission from ${name}`,
-        html: emailContent,
-      })
+        const emailContent = `
+          <h2>New Contact Form Submission</h2>
+          <p><strong>Name:</strong> ${name}</p>
+          <p><strong>Email:</strong> ${email}</p>
+          ${phone ? `<p><strong>Phone:</strong> ${phone}</p>` : ''}
+          ${preferredDateTime ? `<p><strong>Preferred Date/Time:</strong> ${new Date(preferredDateTime).toLocaleString()}</p>` : ''}
+          <p><strong>Message:</strong></p>
+          <p>${message.replace(/\n/g, '<br>')}</p>
+        `
 
-    } catch (emailError) {
-      console.error('Email sending error:', emailError)
-      // Don't fail the submission if email fails to send
+        console.log('[v0] Sending email from:', fromEmail, 'to:', toEmail)
+
+        const emailResponse = await resend.emails.send({
+          from: fromEmail,
+          to: toEmail,
+          subject: `New Contact Form Submission from ${name}`,
+          html: emailContent,
+        })
+
+        console.log('[v0] Email sent successfully:', emailResponse)
+      } catch (emailError) {
+        console.error('[v0] Email sending error:', emailError)
+        // Don't fail the submission if email fails to send
+      }
+    } else {
+      console.warn('[v0] RESEND_API_KEY not configured. Skipping email notification.')
     }
 
     return NextResponse.json(
-      { success: true, data },
+      { success: true, message: 'Form submitted successfully!', data },
       { status: 201 }
     )
   } catch (error) {
-    console.error('API error:', error)
+    console.error('[v0] API error:', error)
     return NextResponse.json(
-      { error: 'Internal server error' },
+      { error: `Internal server error: ${error instanceof Error ? error.message : 'Unknown error'}` },
       { status: 500 }
     )
   }

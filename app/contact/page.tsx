@@ -24,6 +24,7 @@ export default function ContactPage() {
 
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [successMessage, setSuccessMessage] = useState("")
+  const [errorMessage, setErrorMessage] = useState("")
   const [isSubmitted, setIsSubmitted] = useState(false)
 
   const hours = Array.from({ length: 24 }, (_, i) => i.toString().padStart(2, "0"))
@@ -40,12 +41,21 @@ export default function ContactPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsSubmitting(true)
+    setErrorMessage("")
+    setSuccessMessage("")
 
     try {
       // Combine date and time
       const preferredDateTime = formData.date && formData.hours && formData.minutes
         ? `${formData.date}T${formData.hours}:${formData.minutes}:00`
         : null
+
+      console.log('[v0] Form submission started with data:', {
+        fullName: formData.fullName,
+        email: formData.email,
+        phone: formData.contactNumber,
+        preferredDateTime,
+      })
 
       const response = await fetch('/api/contact', {
         method: 'POST',
@@ -64,15 +74,19 @@ export default function ContactPage() {
       const data = await response.json()
 
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to submit form')
+        const errorMsg = data.error || 'Failed to submit form'
+        console.error('[v0] API returned error:', errorMsg)
+        throw new Error(errorMsg)
       }
 
+      console.log('[v0] Form submitted successfully:', data)
       setSuccessMessage("Thank you! We will contact you!!")
       setIsSubmitted(true)
     } catch (error) {
-      console.error('Form submission error:', error)
-      setSuccessMessage("Error submitting form. Please try again.")
-      setTimeout(() => setSuccessMessage(""), 5000)
+      const errorMsg = error instanceof Error ? error.message : 'Error submitting form. Please try again.'
+      console.error('[v0] Form submission error:', errorMsg)
+      setErrorMessage(errorMsg)
+      setTimeout(() => setErrorMessage(""), 5000)
     } finally {
       setIsSubmitting(false)
     }
@@ -110,6 +124,13 @@ export default function ContactPage() {
               </div>
             ) : (
               <form onSubmit={handleSubmit} className="space-y-6 bg-white p-8 rounded-lg shadow-lg">
+                {errorMessage && (
+                  <div className="bg-red-50 border-2 border-red-200 rounded-lg p-4 text-red-700">
+                    <p className="font-semibold">Error:</p>
+                    <p>{errorMessage}</p>
+                  </div>
+                )}
+
                 {/* Full Name */}
                 <div>
                   <label className="block text-sm font-medium text-blue-900 mb-2">
