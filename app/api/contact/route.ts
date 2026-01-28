@@ -91,12 +91,13 @@ export async function POST(request: NextRequest) {
         <p>${message.replace(/\n/g, '<br>')}</p>
       `
 
-      await resend.emails.send({
+      const emailResponse = await resend.emails.send({
         from: 'onboarding@resend.dev',
         to: 'manish.singla2303@gmail.com',
         subject: `New Contact Form Submission from ${name}`,
         html: emailContent,
       })
+
     } catch (emailError) {
       console.error('Email sending error:', emailError)
       // Don't fail the submission if email fails to send
