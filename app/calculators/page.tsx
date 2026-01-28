@@ -16,12 +16,7 @@ export default function CalculatorsPage() {
       description: "Calculate the SIP required to secure your child's education costs",
       icon: "🎓"
     },
-    {
-      id: "education-timeline",
-      title: "Education Timeline Calculator",
-      description: "Plan your education investments with a dynamic glide path strategy",
-      icon: "📚"
-    },
+
     {
       id: "retirement",
       title: "Retirement Calculator",
